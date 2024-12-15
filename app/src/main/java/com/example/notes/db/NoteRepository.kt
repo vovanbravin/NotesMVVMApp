@@ -24,6 +24,13 @@ class NoteRepository(private val dao: Dao) {
         }
     }
 
+    fun updateNote(id: Int, time: String, date: String, topic: String, text: String)
+    {
+        scope.launch(Dispatchers.IO) {
+            dao.updateNote(id, time, date, topic, text)
+        }
+    }
+
 
 
 

@@ -28,5 +28,15 @@ class Note {
         this.text = text
     }
 
+    constructor(id:Int ,time: String, date: String, topic: String, text: String)
+    {
+        this.time = time
+        this.date = date
+        this.topic = topic
+        this.text = text
+        this.noteId = id
+    }
+
+
 
 }
