@@ -1,7 +1,6 @@
 package com.example.notes
 
 import android.annotation.SuppressLint
-import android.content.res.Resources
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -23,10 +21,14 @@ import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -44,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.TextOverflow
@@ -68,6 +71,7 @@ sealed class Screens(val route: String) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Notes(notes: List<Note>, theme: Theme, navController: NavController, viewModel: NoteViewModel) {
+    val textColor = if (theme.color != Color.White) Color.White else Color.Black
     Scaffold(
         topBar = {
             TopAppBar(
@@ -83,7 +87,7 @@ fun Notes(notes: List<Note>, theme: Theme, navController: NavController, viewMod
                     }
                 },
                 actions = {
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = { navController.navigate(Screens.Settings.route) }) {
                         Icon(Icons.Filled.Settings, contentDescription = "Настройки")
                     }
                 },
@@ -114,7 +118,12 @@ fun Notes(notes: List<Note>, theme: Theme, navController: NavController, viewMod
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp)
                         .padding(bottom = 5.dp)
-                        .background(Color.DarkGray, shape = RoundedCornerShape(20.dp))
+                        .background(
+                            if (theme.color == Color.White) colorResource(R.color.notesForLightTheme)
+                            else if (theme.color == Color.DarkGray) colorResource(R.color.notesForDarkGrayTheme)
+                            else colorResource(R.color.notesForDarkTheme),
+                            shape = RoundedCornerShape(20.dp)
+                        )
                         .padding(5.dp)
                         .clickable {
                             navController.navigate("EditNote/${note.noteId}")
@@ -124,20 +133,31 @@ fun Notes(notes: List<Note>, theme: Theme, navController: NavController, viewMod
                         text = note.topic, fontSize = (theme.fontSize + 2).sp,
                         modifier = Modifier
                             .fillMaxWidth(),
-                        maxLines = 1
+                        maxLines = 1,
+                        color = textColor
                     )
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically)
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    )
                     {
-                        Text(text = note.date, fontSize = (theme.fontSize - 2).sp)
+                        Text(text = note.date, fontSize = (theme.fontSize - 2).sp,
+                            color = textColor)
                         Text(
-                            text = note.text.substringBefore(" "), fontSize = (theme.fontSize - 2).sp,
+                            text = note.text.substringBefore(" "),
+                            fontSize = (theme.fontSize - 2).sp,
                             modifier = Modifier
                                 .padding(start = 10.dp),
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            color = textColor
                         )
-                        IconButton(onClick = { viewModel.deleteNote(note.noteId!!) }) {
-                            Icon(Icons.Filled.Delete, contentDescription = "Удалить")
+                        IconButton(onClick = { viewModel.deleteNote(note.noteId!!) },
+                            colors = IconButtonDefaults.iconButtonColors(
+                                contentColor = textColor
+                            )) {
+                            Icon(Icons.Filled.Delete, contentDescription = "Удалить",)
                         }
 
                     }
@@ -159,16 +179,22 @@ fun NewNote(navController: NavController, theme: Theme, viewModel: NoteViewModel
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = stringResource(id = R.string.notes),
+
+                },
+                navigationIcon = {
+                    Row(
                         modifier = Modifier
                             .clickable {
                                 navController.navigate(Screens.Notes.route)
-                            }
-                    )
-                },
-                navigationIcon = {
-                    Icon(Icons.Filled.KeyboardArrowLeft, contentDescription = "Назад")
+                            },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Filled.KeyboardArrowLeft, contentDescription = "Назад")
+                        Text(
+                            text = stringResource(id = R.string.notes),
+                            fontSize = (theme.fontSize + 5).sp
+                        )
+                    }
                 },
                 actions = {
                     Text(
@@ -264,7 +290,13 @@ fun NewNote(navController: NavController, theme: Theme, viewModel: NoteViewModel
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditNote(notes: List<Note>, viewModel: NoteViewModel, noteId: Int, theme: Theme, navController: NavController) {
+fun EditNote(
+    notes: List<Note>,
+    viewModel: NoteViewModel,
+    noteId: Int,
+    theme: Theme,
+    navController: NavController,
+) {
     val selectedId = notes.indexOfFirst { it.noteId == noteId }
     val selectedNote = notes[selectedId]
     val textColor = if (theme.color != Color.White) Color.White else Color.Black
@@ -277,17 +309,23 @@ fun EditNote(notes: List<Note>, viewModel: NoteViewModel, noteId: Int, theme: Th
         {
             TopAppBar(
                 title = {
-                    Text(
-                        text = stringResource(id = R.string.notes),
-                        modifier = Modifier
-                            .clickable {
-                                navController.navigate(Screens.Notes.route)
-                            }
-                    )
+
                 },
                 navigationIcon =
                 {
-                    Icon(Icons.Filled.KeyboardArrowLeft, contentDescription = "Назад")
+                    Row(
+                        modifier = Modifier
+                            .clickable {
+                                navController.navigate(Screens.Notes.route)
+                            },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Filled.KeyboardArrowLeft, contentDescription = "Назад")
+                        Text(
+                            text = stringResource(id = R.string.notes),
+                            fontSize = (theme.fontSize + 5).sp
+                        )
+                    }
                 },
                 actions =
                 {
@@ -313,7 +351,6 @@ fun EditNote(notes: List<Note>, viewModel: NoteViewModel, noteId: Int, theme: Th
         },
         containerColor = theme.color,
         contentColor = textColor
-
 
 
     )
@@ -373,5 +410,80 @@ fun EditNote(notes: List<Note>, viewModel: NoteViewModel, noteId: Int, theme: Th
         }
     }
 }
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Settings(
+    themeState: Theme,
+    changeThemeState: (Theme) -> Unit,
+    navController: NavController,
+    themes: List<Theme>,
+) {
+    val textColor = if (themeState.color != Color.White) Color.White else Color.Black
+    Scaffold(
+        topBar =
+        {
+            TopAppBar(
+                title = {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text(text = "Настройки", fontSize = 20.sp)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = themeState.color,
+                    titleContentColor = textColor,
+                    actionIconContentColor = textColor,
+                    navigationIconContentColor = textColor
+
+                )
+
+            )
+        },
+        containerColor = themeState.color,
+        floatingActionButton = {
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center)
+            {
+                Button(onClick = { navController.navigate(Screens.Notes.route) }) {
+                    Text(text = "Сохранить")
+                }
+            }
+        }
+
+
+    ) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .padding(it)
+        )
+        {
+            Column(
+                modifier = Modifier
+                    .padding(start = 20.dp)
+            ) {
+                Text(
+                    text = "Тема: ", fontSize = themeState.fontSize.sp,
+                    color = textColor
+                )
+                LazyColumn {
+                    items(themes) { theme ->
+                        Row(
+                            Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = theme == themeState,
+                                onClick = { changeThemeState(theme) })
+                            Text(text = theme.name, fontSize = theme.fontSize.sp, color = textColor)
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+}
+
+
 
 
