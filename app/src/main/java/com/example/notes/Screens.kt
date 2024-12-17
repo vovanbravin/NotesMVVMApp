@@ -20,9 +20,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -42,6 +44,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusModifier
@@ -67,11 +70,18 @@ sealed class Screens(val route: String) {
 
 }
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+
+
+
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Notes(notes: List<Note>, theme: Theme, navController: NavController, viewModel: NoteViewModel) {
     val textColor = if (theme.color != Color.White) Color.White else Color.Black
+    var expanded by mutableStateOf(false)
+    var  selectedMode by mutableStateOf(0)
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -87,6 +97,37 @@ fun Notes(notes: List<Note>, theme: Theme, navController: NavController, viewMod
                     }
                 },
                 actions = {
+                    Box {
+                        IconButton(onClick = {expanded = true }) {
+                            Icon(Icons.Filled.MoreVert, contentDescription = "Меню")
+                        }
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier
+                                .padding(10.dp)) {
+                            Text(text = "За дань",Modifier
+                                .clickable {
+                                    selectedMode = 1
+                                })
+                            Text(text = "За неделю", Modifier
+                                .clickable {
+                                    selectedMode = 2
+                                })
+                            Text(text = "За месяц", Modifier
+                                .clickable {
+                                    selectedMode = 3
+                                })
+                            Text(text = "За год", Modifier
+                                .clickable {
+                                    selectedMode = 4
+                                })
+                            Text(text = "За все время",Modifier
+                                .clickable {
+                                    selectedMode = 0
+                                })
+                        }
+                    }
                     IconButton(onClick = { navController.navigate(Screens.Settings.route) }) {
                         Icon(Icons.Filled.Settings, contentDescription = "Настройки")
                     }
